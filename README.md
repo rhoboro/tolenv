@@ -1,3 +1,5 @@
+[src/](./src)に学習中のコードを格納しています
+
 # tolenv
 
 ![tolenv_banner](docs/tolenv_banner.png)

@@ -1,0 +1,1 @@
+- `RESB 0x7dfe-$` の箇所だけ `TIMES 0x1fe-($-$$) DB 0` に変更
