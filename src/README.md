@@ -3,6 +3,7 @@
 ```shell
 $ brew install qemu
 $ brew install nasm
+$ brew install mtools
 ```
 
 ## メモ
