@@ -1,2 +1,1 @@
 - http://oswiki.osask.jp/?%28AT%29BIOS#q5006ed6
-- 0x0820 は 0x8200 へ

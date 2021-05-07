@@ -80,6 +80,8 @@ next:
 		ADD		CH,1
 		CMP		CH,CYLS
 		JB		readloop
+		MOV		[0x0ff0],CH	; haribote.sysにどこまでディスクを読んだか渡す
+		JMP		0xc200	; 0x8000（ディスクの内容を入れるメモリ上の開始位置） + 0x4200（ディスク上での位置） にある haribote.sys にジャンプ
 
 
 fin:
