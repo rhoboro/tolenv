@@ -1,0 +1,1 @@
+- http://oswiki.osask.jp/?%28AT%29BIOS#q5006ed6

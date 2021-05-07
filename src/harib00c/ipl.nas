@@ -36,6 +36,8 @@ entry:
 
 ; ディスクを読む
 ; 最初のセクタがブートセクタなので2番目のセクタを指定している
+; ループで18番目のセクタまで読み込む
+; つまり、 512x17=8704バイトをメモリ0x8200~0xa3ffに読み込む
 
 		MOV		AX,0x8200	; ESx16+BX で読み込むメモリアドレスを表現している
 		MOV		ES,AX
@@ -43,13 +45,16 @@ entry:
 		MOV		DH,0	; ヘッド番号は0~1。ディスクの表が0、裏が1
 		MOV		CL,2	; セクタ番号は0~18。ディスクの円を18分割したもので1セクタ512バイト
 
+readloop:
+		MOV		SI,0	; 失敗回数
+
 retry:
 		MOV		AH,0x02	; 読み込み
 		MOV		AL,1
 		MOV		BX,0
 		MOV		DL,0x00	; 現在ではフロッピーディスクドライブは2つ以上存在することはほぼない
 		INT		0x13	; エラー時はCF(キャリーフラグ)が1になる
-		JNC		fin	; エラーがなければ終了
+		JNC		next	; エラーがなければ終了
 		ADD		SI,1
 		CMP		SI,5
 		JAE		error
@@ -57,6 +62,15 @@ retry:
 		MOV		DL,0x00
 		INT		0x13
 		JMP		retry
+
+next:
+		MOV		AX,ES
+		ADD		AX,0x0020	; 512バイト分アドレスを進める
+		MOV		ES,AX	; ADD ES,0x0020 命令はない
+		ADD		CL,1
+		CMP		CL,18	; セクタの最後
+		JBE		readloop
+
 
 fin:
 		HLT						; 何かあるまでCPUを停止させる
