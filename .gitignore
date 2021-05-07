@@ -1,3 +1,13 @@
 .DS_Store
 harib*/
 *.swp
+*.bin
+*.img
+*.iso
+*.bim
+*.lst
+*.map
+*.obj
+*.org
+*.hrb
+*.swp
