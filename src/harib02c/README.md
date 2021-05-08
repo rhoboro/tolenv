@@ -1,0 +1,3 @@
+- tolenv の使い方に気づいた
+    - make up 後は `../../x_tools/xxx` を指定して実行すれば良い
+    - 中で docker exec が動いている
