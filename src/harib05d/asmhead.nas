@@ -37,20 +37,20 @@ VRAM	EQU		0x0ff8			; グラフィックバッファの開始番地
 ;	PICの初期化はあとでやる
 
 		MOV		AL,0xff
-		OUT		0x21,AL
+		OUT		0x21,AL         ; マスタの割り込みを禁止。ALはアキュムレーターの下位8bit
 		NOP						; OUT命令を連続させるとうまくいかない機種があるらしいので
-		OUT		0xa1,AL
+		OUT		0xa1,AL         ; スレーブの割り込みを禁止
 
 		CLI						; さらにCPUレベルでも割り込み禁止
 
 ; CPUから1MB以上のメモリにアクセスできるように、A20GATEを設定
 
-		CALL	waitkbdout
+		CALL	waitkbdout      ; wait_KBC_sendready と同じ
 		MOV		AL,0xd1
-		OUT		0x64,AL
+		OUT		0x64,AL         ; ポート0x64に1バイトを送る。0x64はこれからコマンド送るよ。
 		CALL	waitkbdout
-		MOV		AL,0xdf			; enable A20
-		OUT		0x60,AL
+		MOV		AL,0xdf			; enable A20。
+		OUT		0x60,AL         ; A20GATE信号線をONにしてね。ONになるとメモリすべてにアクセスできるようになる。互換性のためデフォルトは最大1MBになっている。
 		CALL	waitkbdout
 
 ; プロテクトモード移行
@@ -58,11 +58,13 @@ VRAM	EQU		0x0ff8			; グラフィックバッファの開始番地
 [INSTRSET "i486p"]				; 486の命令まで使いたいという記述
 
 		LGDT	[GDTR0]			; 暫定GDTを設定
-		MOV		EAX,CR0
+		MOV		EAX,CR0         ; ここから4行でCR0レジスタを更新。「32ビットプロテクトモードを使いたい」という意味になる。セグメント野解釈にGDTが使われるようになる = 32ビットモード
 		AND		EAX,0x7fffffff	; bit31を0にする（ページング禁止のため）
-		OR		EAX,0x00000001	; bit0を1にする（プロテクトモード移行のため）
-		MOV		CR0,EAX
-		JMP		pipelineflush
+		OR		EAX,0x00000001	; bit0を1にする（プロテクトモード移行のため）。通常のアプリがセグメント情報を書き換えられなくする
+		MOV		CR0,EAX         ; 正確にはプロテクテッドバーチャルアドレスモード。GDT（セグメント=仮想アドレス）を使わせることで物理アドレスに直接アクセスできなくする
+		JMP		pipelineflush   ; モード変更で命令の意味が変わるのでJMPしてリフレッシュする
+
+; モード変更に合わせてセグメントレジスタの値を変更する。0x0008はGDT+1のセグメント。
 pipelineflush:
 		MOV		AX,1*8			;  読み書き可能セグメント32bit
 		MOV		DS,AX
@@ -73,12 +75,13 @@ pipelineflush:
 
 ; bootpackの転送
 
-		MOV		ESI,bootpack	; 転送元
-		MOV		EDI,BOTPAK		; 転送先
-		MOV		ECX,512*1024/4
-		CALL	memcpy
+		MOV		ESI,bootpack	; コピーしたい関数を指定
+		MOV		EDI,BOTPAK		; コピー先を指定
+		MOV		ECX,512*1024/4  ; コピーするサイズを指定。サイズはダブルワード(4バイト)単位
+		CALL	memcpy          ; 実行。下の2つも同様。
 
 ; ついでにディスクデータも本来の位置へ転送
+; 下記2つでメモリの 0x00100000 以降にブートセクタを含むディスクデータがすべて乗る
 
 ; まずはブートセクタから
 
@@ -87,7 +90,7 @@ pipelineflush:
 		MOV		ECX,512/4
 		CALL	memcpy
 
-; 残り全部
+; 残り全部。諸々の計算はブートセクタの直後に載せるため。
 
 		MOV		ESI,DSKCAC0+512	; 転送元
 		MOV		EDI,DSKCAC+512	; 転送先
@@ -105,15 +108,15 @@ pipelineflush:
 		MOV		EBX,BOTPAK
 		MOV		ECX,[EBX+16]
 		ADD		ECX,3			; ECX += 3;
-		SHR		ECX,2			; ECX /= 4;
-		JZ		skip			; 転送するべきものがない
+		SHR		ECX,2			; ECX /= 4; >>=2 の意味で右に2回シフト(Shift Right)。
+		JZ		skip			; 転送するべきものがない。Jump if zero で直前の結果によってジャンプするか決まる。
 		MOV		ESI,[EBX+20]	; 転送元
 		ADD		ESI,EBX
 		MOV		EDI,[EBX+12]	; 転送先
 		CALL	memcpy
 skip:
 		MOV		ESP,[EBX+12]	; スタック初期値
-		JMP		DWORD 2*8:0x0000001b
+		JMP		DWORD 2*8:0x0000001b    ; CSに 2*8 を代入して 0x1b に飛ぶ特別なJUMP。2番目のセグメントにある0x1b( 物理的には0x28001b になる)はbootpack.hrbのある場所。
 
 waitkbdout:
 		IN		 AL,0x64
