@@ -1,6 +1,4 @@
-//
-// Created by rhoboro on 2021/05/12.
-//
+/* マウスやウィンドウの重ね合わせ処理 */
 
 #include "bootpack.h"
 
@@ -17,13 +15,12 @@ struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram,
   ctl->vram = vram;
   ctl->xsize = xsize;
   ctl->ysize = ysize;
-  ctl->top = -1; // 1枚もない状態
+  ctl->top = -1; /* シートは一枚もない */
   for (i = 0; i < MAX_SHEETS; i++) {
-    ctl->sheets0[i].flags = 0; // 未使用マーク
+    ctl->sheets0[i].flags = 0; /* 未使用マーク */
   }
-
 err:
-  return 0;
+  return ctl;
 }
 
 struct SHEET *sheet_alloc(struct SHTCTL *ctl) {
@@ -31,14 +28,13 @@ struct SHEET *sheet_alloc(struct SHTCTL *ctl) {
   int i;
   for (i = 0; i < MAX_SHEETS; i++) {
     if (ctl->sheets0[i].flags == 0) {
-      sht = &ctl->sheets[i];  // &(ctl->sheets[i])
-      sht->flags = SHEET_USE; // 使用中
-      sht->height = -1; // 高さがない = 身初期化 = 非表示状態
+      sht = &ctl->sheets0[i];
+      sht->flags = SHEET_USE; /* 使用中マーク */
+      sht->height = -1;       /* 非表示中 */
       return sht;
     }
   }
-  // すべて使用中
-  return 0;
+  return 0; /* 全てのシートが使用中だった */
 }
 
 void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize,
@@ -50,62 +46,60 @@ void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize,
   return;
 }
 
-// 高さを調整する関数
 void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
-  int h, old = sht->height;
-  // 不正値を修正
+  int h, old = sht->height; /* 設定前の高さを記憶する */
+
+  /* 指定が低すぎや高すぎだったら、修正する */
   if (height > ctl->top + 1) {
     height = ctl->top + 1;
   }
   if (height < -1) {
     height = -1;
   }
-  sht->height = height;
+  sht->height = height; /* 高さを設定 */
 
-  // sheets[] 並べ替え
-  if (old > height) {
-    // 以前より低くする
+  /* 以下は主にsheets[]の並べ替え */
+  if (old > height) { /* 以前よりも低くなる */
     if (height >= 0) {
+      /* 間のものを引き上げる */
       for (h = old; h > height; h--) {
-        // 間のものを引き上げる
         ctl->sheets[h] = ctl->sheets[h - 1];
         ctl->sheets[h]->height = h;
       }
       ctl->sheets[height] = sht;
-    } else {
-      // 非表示化
+    } else { /* 非表示化 */
       if (ctl->top > old) {
+        /* 上になっているものをおろす */
         for (h = old; h < ctl->top; h++) {
           ctl->sheets[h] = ctl->sheets[h + 1];
           ctl->sheets[h]->height = h;
         }
       }
-      ctl->top--; // 表示中のものが消えるので1段下にズレる
+      ctl->top--; /* 表示中の下じきが一つ減るので、一番上の高さが減る */
     }
-    sheet_refresh(ctl);
-  } else if (old < height) {
+    sheet_refresh(ctl); /* 新しい下じきの情報に沿って画面を描き直す */
+  } else if (old < height) { /* 以前よりも高くなる */
     if (old >= 0) {
-      // 間のものを押し下げる
+      /* 間のものを押し下げる */
       for (h = old; h < height; h++) {
         ctl->sheets[h] = ctl->sheets[h + 1];
         ctl->sheets[h]->height = h;
       }
       ctl->sheets[height] = sht;
-    } else {
-      // 非表示から表示へ
+    } else { /* 非表示状態から表示状態へ */
+      /* 上になるものを持ち上げる */
       for (h = ctl->top; h >= height; h--) {
         ctl->sheets[h + 1] = ctl->sheets[h];
         ctl->sheets[h + 1]->height = h + 1;
       }
       ctl->sheets[height] = sht;
-      ctl->top++; // 表示中が消えるので高さが変わる
+      ctl->top++; /* 表示中の下じきが一つ増えるので、一番上の高さが増える */
     }
-    sheet_refresh(ctl);
+    sheet_refresh(ctl); /* 新しい下じきの情報に沿って画面を描き直す */
   }
   return;
 }
 
-// 描画する関数
 void sheet_refresh(struct SHTCTL *ctl) {
   int h, bx, by, vx, vy;
   unsigned char *buf, c, *vram = ctl->vram;
@@ -117,8 +111,8 @@ void sheet_refresh(struct SHTCTL *ctl) {
       vy = sht->vy0 + by;
       for (bx = 0; bx < sht->bxsize; bx++) {
         vx = sht->vx0 + bx;
-        c = buf[by * sht->bxsize * bx];
-        if (c != sht->col_inv) { // 透明かどうか判定
+        c = buf[by * sht->bxsize + bx];
+        if (c != sht->col_inv) {
           vram[vy * ctl->xsize + vx] = c;
         }
       }
@@ -127,20 +121,19 @@ void sheet_refresh(struct SHTCTL *ctl) {
   return;
 }
 
-// 左右にずらす関数
 void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0) {
   sht->vx0 = vx0;
   sht->vy0 = vy0;
-  if (sht->height >= 0) { // -1 でなかったら表示中
-    sheet_refresh(ctl);
+  if (sht->height >= 0) { /* もしも表示中なら */
+    sheet_refresh(ctl); /* 新しい下じきの情報に沿って画面を描き直す */
   }
   return;
 }
 
 void sheet_free(struct SHTCTL *ctl, struct SHEET *sht) {
   if (sht->height >= 0) {
-    sheet_updown(ctl, sht, -1);
+    sheet_updown(ctl, sht, -1); /* 表示中ならまず非表示にする */
   }
-  sht->flags = 0; // 未使用にする
+  sht->flags = 0; /* 未使用マーク */
   return;
 }
