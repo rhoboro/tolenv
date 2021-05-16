@@ -3,6 +3,8 @@
 #include "bootpack.h"
 #include <stdio.h>
 
+#define IDOL 100
+
 void make_window8(unsigned char *buf, int xsize, int ysize, char *title);
 
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);
@@ -83,16 +85,16 @@ void HariMain(void) {
 
   for (;;) {
     count++;
-    // この2行を消すと処理が重くなる...
-    // 同様の人が他にもいそう
-    // https://qiita.com/S-YOU/items/579d879163c5a46e2f75
-    // https://yuyubu.hatenablog.com/entry/2018/06/07/30%E6%97%A5OS%E8%87%AA%E4%BD%9C%E6%9C%AC16%E6%97%A5%E7%9B%AE
-//    sprintf(s, "%010d", timerctl.count);
-//    putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 11);
 
-    io_cli();
+    if (count % IDOL == 0) {
+      // 高頻度で呼びすぎるとカクつくので適度に待つ
+      // https://kawasin73.hatenablog.com/entry/2019/07/14/173246
+      io_cli();
+    }
     if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0) {
-      io_sti();
+      if (count % IDOL == 0) {
+        io_sti();
+      }
     } else {
       if (fifo8_status(&keyfifo) != 0) {
         i = fifo8_get(&keyfifo);
