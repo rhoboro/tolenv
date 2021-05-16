@@ -84,6 +84,9 @@ void HariMain(void) {
   for (;;) {
     count++;
     // この2行を消すと処理が重くなる...
+    // 同様の人が他にもいそう
+    // https://qiita.com/S-YOU/items/579d879163c5a46e2f75
+    // https://yuyubu.hatenablog.com/entry/2018/06/07/30%E6%97%A5OS%E8%87%AA%E4%BD%9C%E6%9C%AC16%E6%97%A5%E7%9B%AE
 //    sprintf(s, "%010d", timerctl.count);
 //    putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 11);
 
