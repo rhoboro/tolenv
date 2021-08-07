@@ -6,7 +6,7 @@ $ brew install nasm
 $ brew install mtools
 ```
 
-- 画面モードは109で進めた
+- asmhead.nas の画面モードは109で進めた
 
 ## メモ
 
