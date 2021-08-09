@@ -1,0 +1,1 @@
+- ../../z_tools/haribote/haribote.rul 内の相対パスに ../ を追加した
