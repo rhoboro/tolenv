@@ -11,7 +11,7 @@ BIN2OBJ:=$(TOOL_PATH)/bin2obj
 EDIMG:=$(TOOL_PATH)/edimg
 RULEFILE = $(TOOL_PATH)/haribote/haribote.rul
 
-haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb hello5.hrb a.hrb winhelo.hrb winhelo2.hrb winhelo3.hrb star1.hrb
+haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb hello5.hrb a.hrb winhelo.hrb winhelo2.hrb winhelo3.hrb star1.hrb stars.hrb
 	@$(EDIMG) imgin:$(TOOL_PATH)/fdimg0at.tek \
 	  wbinimg src:ipl10.bin len:512 from:0 to:0 \
 	  copy from:haribote.sys to:@: \
@@ -26,6 +26,7 @@ haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb 
 	  copy from:winhelo2.hrb to:@: \
 	  copy from:winhelo3.hrb to:@: \
 	  copy from:star1.hrb to:@: \
+	  copy from:stars.hrb to:@: \
 	  copy from:a.hrb to:@: \
 	  imgout:haribote.img
 
@@ -97,6 +98,12 @@ star1.bim: star1.obj a_nask.obj Makefile
 
 star1.hrb: star1.bim Makefile
 	$(BIM2HRB) star1.bim star1.hrb 0
+
+stars.bim: stars.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:stars.bim stack:1k map:stars.map stars.obj a_nask.obj
+
+stars.hrb: stars.bim Makefile
+	$(BIM2HRB) stars.bim stars.hrb 0
 
 a.bim: a.obj a_nask.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:a.bim map:a.map a.obj a_nask.obj
