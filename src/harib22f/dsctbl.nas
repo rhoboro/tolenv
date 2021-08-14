@@ -9,7 +9,6 @@
 	EXTERN	_asm_inthandler0d
 	EXTERN	_asm_inthandler20
 	EXTERN	_asm_inthandler21
-	EXTERN	_asm_inthandler27
 	EXTERN	_asm_inthandler2c
 	EXTERN	_asm_hrb_api
 [FILE "dsctbl.c"]
@@ -88,15 +87,9 @@ L11:
 	ADD	ESP,32
 	PUSH	142
 	PUSH	16
-	PUSH	_asm_inthandler27
-	PUSH	2554168
-	CALL	_set_gatedesc
-	PUSH	142
-	PUSH	16
 	PUSH	_asm_inthandler2c
 	PUSH	2554208
 	CALL	_set_gatedesc
-	ADD	ESP,32
 	PUSH	238
 	PUSH	16
 	PUSH	_asm_hrb_api

@@ -10,15 +10,12 @@ unsigned char rgb2pal(int r, int g, int b, int x, int y);
 
 void HariMain(void) {
     char *buf;
-    int win, x, y, r, g, b;
+    int win, x, y;
     api_initmalloc();
     buf = api_malloc(144 * 164);
     win = api_openwin(buf, 144, 164, -1, "color2");
     for (y = 0; y < 128; y++) {
         for (x = 0; x < 128; x++) {
-            r = x * 2;
-            g = y * 2;
-            b = 0;
             buf[(x + 8) + (y + 28) * 144] = rgb2pal(x * 2, y * 2, 0, x, y);
         }
     }
@@ -33,10 +30,10 @@ unsigned char rgb2pal(int r, int g, int b, int x, int y) {
     x &= 1; /* 偶数か奇数か */
     y &= 1;
     i = table[x + y * 2]; /* 中間色を作るための定数 */
-    r = (r * 21) / 256;   /* これで0~20になる */
+    r = (r * 21) / 256;   /* これで 0〜20 になる */
     g = (g * 21) / 256;
     b = (b * 21) / 256;
-    r = (r + i) / 4; /* これで0~5になる*/
+    r = (r + i) / 4; /* これで 0〜5 になる */
     g = (g + i) / 4;
     b = (b + i) / 4;
     return 16 + r + g * 6 + b * 36;

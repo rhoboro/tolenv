@@ -5,7 +5,7 @@ char *api_malloc(int size);
 void api_point(int win, int x, int y, int col);
 void api_end(void);
 
-int rand(void);
+int rand(void); /* 0〜32767の範囲で乱数を発生 */
 
 void HariMain(void) {
     char *buf;
@@ -13,12 +13,11 @@ void HariMain(void) {
     api_initmalloc();
     buf = api_malloc(150 * 100);
     win = api_openwin(buf, 150, 100, -1, "stars");
-    api_boxfilwin(win, 6, 26, 143, 93, 0);
+    api_boxfilwin(win, 6, 26, 143, 93, 0 /* 黒 */);
     for (i = 0; i < 50; i++) {
         x = (rand() % 137) + 6;
         y = (rand() % 67) + 26;
-        api_point(win, x, y, 3);
+        api_point(win, x, y, 3 /* 黄 */);
     }
-    api_point(win, 75, 59, 3);
     api_end();
 }

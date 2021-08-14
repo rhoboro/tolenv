@@ -118,7 +118,7 @@ int timer_cancel(struct TIMER *timer) {
     struct TIMER *t;
     e = io_load_eflags();
     io_cli();                                /* 設定中にタイマの状態が変化しないようにするため */
-    if (timer->flags == TIMER_FLAGS_USING) { /* 取り消し処理は必要か? */
+    if (timer->flags == TIMER_FLAGS_USING) { /* 取り消し処理は必要か？ */
         if (timer == timerctl.t0) {
             /* 先頭だった場合の取り消し処理 */
             t = timer->next;
@@ -126,7 +126,7 @@ int timer_cancel(struct TIMER *timer) {
             timerctl.next = t->timeout;
         } else {
             /* 先頭以外の場合の取り消し処理 */
-            /* timerの1つ前を探す */
+            /* timerの一つ前を探す */
             t = timerctl.t0;
             for (;;) {
                 if (t->next == timer) {
@@ -134,7 +134,7 @@ int timer_cancel(struct TIMER *timer) {
                 }
                 t = t->next;
             }
-            t->next = timer->next; /* 「timerの直前」の次が、「timerの次」を指すようにする*/
+            t->next = timer->next; /* 「timerの直前」の次が、「timerの次」を指すようにする */
         }
         timer->flags = TIMER_FLAGS_ALLOC;
         io_store_eflags(e);
