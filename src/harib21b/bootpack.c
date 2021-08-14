@@ -19,6 +19,9 @@ void HariMain(void) {
     struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_cons;
     struct TASK *task_a, *task_cons;
     struct TIMER *timer;
+    int j, x, y;
+    struct SHEET *sht;
+
     static char keytable0[0x80] = {
         0,   0,   '1', '2', '3', '4',  '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,    'Q', 'W', 'E', 'R', 'T', 'Y',
         'U', 'I', 'O', 'P', '@', '[',  0,   0,   'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K',  'L', ';', ':', 0,   0,   ']',
@@ -260,8 +263,19 @@ void HariMain(void) {
                     }
                     sheet_slide(sht_mouse, mx, my);
                     if ((mdec.btn & 0x01) != 0) {
-                        /* 左ボタンを押していたら、sht_winを動かす */
-                        sheet_slide(sht_win, mx - 80, my - 8);
+                        /* 左ボタンを推している */
+                        /* 上の下じきから順番にマウスが指している下じきを探す */
+                        for (j = shtctl->top - 1; j > 0; j--) {
+                            sht = shtctl->sheets[j];
+                            x = mx - sht->vx0;
+                            y = my - sht->vy0;
+                            if (0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {
+                                if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
+                                    sheet_updown(sht, shtctl->top - 1);
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             } else if (i <= 1) { /* カーソル用タイマ */
