@@ -7,6 +7,7 @@ $ brew install mtools
 ```
 
 - asmhead.nas の画面モードは109で進めた
+- harib22e からウィンドウが壊れている（原因はそれ以前からあるのかもしれない
 
 ## メモ
 
