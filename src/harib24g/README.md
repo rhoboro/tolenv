@@ -1,0 +1,5 @@
+- パターンルールがうまく動かなかったのでとりあえず最低限の下記だけを確認
+    - make でimg作成
+    - make run でqemu実行
+    - make clean で掃除
+    - make format
