@@ -1,0 +1,95 @@
+APP      = gview
+STACK    = 4480k
+MALLOC   = 0k
+
+TOOLPATH = ../../../z_tools/
+INCPATH  = ../../../z_tools/haribote/
+APILIBPATH   = ../apilib/
+HARIBOTEPATH = ../haribote/
+
+MAKE     = $(TOOLPATH)make -r
+NASK     = $(TOOLPATH)nask
+CC1      = $(TOOLPATH)gocc1 -I$(INCPATH) -I../ -Os -Wall -quiet
+GAS2NASK = $(TOOLPATH)gas2nask -a
+OBJ2BIM  = $(TOOLPATH)obj2bim
+MAKEFONT = $(TOOLPATH)makefont
+BIN2OBJ  = $(TOOLPATH)bin2obj
+BIM2HRB  = $(TOOLPATH)bim2hrb
+BIM2BIN  = $(TOOLPATH)bim2bin
+RULEFILE = $(TOOLPATH)/haribote/haribote.rul
+EDIMG    = $(TOOLPATH)edimg
+IMGTOL   = $(TOOLPATH)imgtol.com
+GOLIB    = $(TOOLPATH)golib00 
+HARITOL  = $(TOOLPATH)haritol
+COPY     = $(HARITOL) copy
+DEL      = $(HARITOL) remove
+
+CLEAN_FILES	:= $(wildcard *.lst *.obj *.map *.bim *.org)
+
+# デフォルト動作
+
+default :
+	$(MAKE) $(APP).hrb
+
+# ファイル生成規則
+
+$(APP).bim : $(APP).obj bmp.obj jpeg.obj $(APILIBPATH)apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:$(APP).bim map:$(APP).map stack:$(STACK) \
+		$(APP).obj jpeg.obj bmp.obj $(APILIBPATH)apilib.lib
+
+$(APP).hrb: $(APP).bim Makefile ../app_make.txt
+	$(BIM2HRB) $(APP).bim $(APP).hrb $(MALLOC)
+
+haribote.img : ../haribote/haribote.sys $(APP).hrb \
+		Makefile ../app_make.txt
+	$(EDIMG)   imgin:../../z_tools/fdimg0at.tek \
+		copy from:../haribote/haribote.sys to:@: \
+		copy from:$(APP).hrb to:@: \
+		copy from:../nihongo/nihongo.fnt to:@: \
+		imgout:haribote.img
+
+# 一般規則
+
+%.gas : %.c ../apilib.h Makefile
+	$(CC1) -o $*.gas $*.c
+
+%.nas : %.gas Makefile
+	$(GAS2NASK) $*.gas $*.nas
+
+%.obj : %.nas Makefile
+	$(NASK) $*.nas $*.obj $*.lst
+
+%.org : %.bim Makefile
+	$(BIM2HRB) $*.bim $*.org $(MALLOC)
+
+%.hrb : %.org Makefile
+	$(BIM2BIN) -osacmp in:$*.org out:$*.hrb
+
+# コマンド
+
+run :
+	$(MAKE) haribote.img
+	$(HARITOL) concat ..\..\z_tools\qemu\fdimage0.bin haribote.img
+	$(MAKE) -C ../../z_tools/qemu
+
+full :
+	$(MAKE) -C $(APILIBPATH)
+	$(MAKE) $(APP).hrb
+
+run_full :
+	$(MAKE) -C $(APILIBPATH)
+	$(MAKE) -C ../haribote
+	$(MAKE) run
+
+clean :
+	-$(DEL) *.lst
+	-$(DEL) gview.obj
+	-$(DEL) jpeg.obj
+	-$(DEL) *.map
+	-$(DEL) *.bim
+	-$(DEL) *.org
+	-$(DEL) haribote.img
+
+src_only :
+	$(MAKE) clean
+	-$(DEL) $(APP).hrb
